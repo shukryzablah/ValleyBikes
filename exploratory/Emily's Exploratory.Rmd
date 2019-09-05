@@ -1,0 +1,102 @@
+---
+title: "Untitled"
+output: html_document
+---
+
+```{r}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(dplyr)
+library(tidyr)
+library(vroom)
+library(lubridate)
+library(ggplot2)
+library(stringr)
+<<<<<<< HEAD
+
+Routes
+=======
+```
+
+
+```{r}
+Routes <- vroom("../data/slim.tsv",
+                col_types = cols(
+                    route_id = col_character(),
+                    bike = col_number(),
+                    date = col_datetime(format = ""),
+                    latitude = col_double(),
+                    longitude = col_double(),
+                    user_id = col_character()
+                ))
+
+Routes %>% head()
+>>>>>>> 931c241... updated code for grabbing locations by popularity
+```
+
+```{r}
+Routes <- Routes %>%
+    drop_na(-date)  %>% # 9 entries are NA only
+  #  drop_na() %>%  # around 400 entries have no date info
+    distinct()
+```
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+## 1)  and 3) How does usage vary in Amherst during the school year vs. during the summer?
+There is a bimodal distribution of bike usage, where the peak of the usage is in the summer of 2018 and 2019. July of 2019 saw the most usage, with 28,614 bike trips. January of 2019 saw the least usage, with only 2 bike trips. However, there does not appear to be any usage for the following months in 2019: February, March and we only have data beginning in July of 2018. The college school year is from September- May, and we only have data from 1 school year (2018), so it is hard to extrapolate much. September of 2018 did see a large usage (28,413), the second most of any month in the data set. The trends in usage look to be dictated by seasonal weather changes. 
+```{r}
+Routes%>%
+  mutate(date=round_date(date, unit="day"))%>%
+  filter(date >= "2017-01-01")%>%
+    count(date)%>%
+    ggplot(aes(x=date, y=n)) + geom_point() + geom_smooth(span=0.2)
+
+Routes%>%
+  mutate(date=round_date(date, unit="month"))%>%
+  filter(date >= "2017-01-01")%>%
+    count(date)%>%
+    arrange(desc(n))%>%
+    ggplot(aes(x=date, y=n)) + geom_point() + geom_smooth()
+```
+
+
+## 2) What are the most popular stations, what are the least? 
+For this problem I took the following approach to try and recover the stations:
+1) Round Lat and Long or else we recover 1,000 of potential station coordinates
+2) Identify the potential coordinates for a stations (~60)
+3) Create a location variable by combining the two variables as strings or locations
+4) count(location, sort=TRUE)
+5) Plot location (the stations) vs count
+```{r}
+#Utilize #of hits per station to create heat map (based on frequency)
+Routes$latitude<-round(Routes$latitude, 3)
+Routes$longitude<-round(Routes$longitude, 3)
+
+#Grabbing the most popular 61 latitudes, must be stations
+Routes%>%
+  group_by(latitude, longitude)%>%
+  summarize(N=n())%>%
+  arrange(desc(N))%>%
+  filter(N>500)%>%
+  ggplot(aes(x=longitude, y=latitude, size=N)) + geom_point()%>%
+  head(3)
+ 
+```
+
+
+## 4) How does usage vary across the day?
+The most bike usage occurs in the evening- with 9pm racking in the most with 15688 users returning or leaving from a trip. There does not appear to be much usage during the work-day, from 7am-5pm, as well as the early morning. There is a suprising amount of usage during the night, with 11pm and midnight rides tallying  14582 and 14582	users respectively. 
+```{r}
+Routes%>%
+  filter(date >= "2017-01-01")%>%
+  mutate(hour=hour(date))%>%
+    count(hour, sort=TRUE)%>%
+    ggplot(aes(x=hour, y=n)) + geom_point() + geom_smooth(span=0.2)
+```
+
+
+
