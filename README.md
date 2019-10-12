@@ -1,8 +1,12 @@
 # ValleyBikes
 
-Contains route data and stations data for Valley Bikes.
+This package contains route and station data for the Valley Bike service.
 
-https://valleybike.org/
+## Installation
 
-Shukry Zablah
-Emily Lachtara
+```R
+# Install the development version from Github
+devtools::install_github("Amherst-Statistics/ValleyBikes")
+```
+
+For more information on Valley Bike visit: https://valleybike.org/
