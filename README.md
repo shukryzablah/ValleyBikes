@@ -1,5 +1,8 @@
 # ValleyBikes
 
-The reports folder contains our work.
+Contains route data and stations data for Valley Bikes.
 
-Emily Lachtara and Shukry Zablah
+https://valleybike.org/
+
+Shukry Zablah
+Emily Lachtara

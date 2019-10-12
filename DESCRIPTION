@@ -1,0 +1,12 @@
+Package: ValleyBikes
+Title: Provide data from Valley Bikes
+Version: 0.0.0.9000
+Authors@R: 
+    person(given = "Shukry",
+           family = "Zablah",
+           role = c("aut", "cre"),
+           email = "szablah20@amherst.edu")
+Description: The package provides a slim down version of the valley bike data for all time. Examples of a couple of days of GPS data are also provided.
+License: MIT
+Encoding: UTF-8
+LazyData: true
