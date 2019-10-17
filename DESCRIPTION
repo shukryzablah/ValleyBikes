@@ -6,6 +6,10 @@ Authors@R:
            family = "Zablah",
            role = c("aut", "cre"),
            email = "szablah20@amherst.edu")
+    person(given = "Emily",
+           family = "Lachtara",
+           role = c("aut", "cre"),
+           email = "elachtara21@amherst.edu")
 Description: The package provides route and station data for Valley Bikes. It also provides an example of the raw GPS data.
 License: MIT
 Encoding: UTF-8
