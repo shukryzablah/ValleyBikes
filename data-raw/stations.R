@@ -1,13 +1,10 @@
 #' ---
-#' title: "Untitled"
-#' author: "Emily Lachtara"
-#' date: "10/10/2019"
-#' output: html_document
-#' ---
+#' title: "Stations"
+#' author: "Emily Lachtara and Shukry Zablah"
 #' 
-## ----setup, include=FALSE------------------------------------------------
+## ----setup ------------------------------------------------
 library(jsonlite)
-library(leaflet)
+library(sf)
 library(tidyverse)
 
 #' 
@@ -37,23 +34,84 @@ library(tidyverse)
 #' 
 ## ------------------------------------------------------------------------
 #IMPORTING JSON FILE FROM WEBSITE
-valleybiketable<-fromJSON("https://valleybike.org/stations/stations/")
-valleybiketable<-as.data.frame(valleybiketable)
+valleybiketable <- fromJSON("https://valleybike.org/stations/stations/")
+
+valleybiketable <- as_tibble(valleybiketable)
 
 
 #SELECTING FOR VARIABLES
-valleybikedf<-dplyr::select(valleybiketable,  serial_number, address, name, stocking_full, location)
+valleybikedf<-dplyr::select(valleybiketable,  serial_number,
+                            address, name, stocking_full, location)
 
 #CLEANING IT UP
 stations<-valleybikedf%>%
-  separate(location, into=c("Latitude", "Longitude"), sep=",")%>%
-  mutate(Longitude = parse_number(Longitude))%>%
-  mutate(Latitude= parse_number(Latitude))%>%
+  separate(location, into=c("latitude", "longitude"), sep=",")%>%
+  mutate(longitude = parse_number(longitude))%>%
+  mutate(latitude= parse_number(latitude))%>%
   mutate(serial_number =parse_number(serial_number))%>%
-    rename(Serial_Num= serial_number, Address=address, Station_Name=name, Num_Docks=stocking_full) %>%
+    rename(serial_num= serial_number, address=address,
+           station_name=name, num_docks=stocking_full) %>%
     as_tibble()
 
 #' 
-## ------------------------------------------------------------------------
+## ---------------------------Update--------------------------
+
+# reproducibility
+set.seed(1)
+
+# temporary solution, each station should already be classified into region
+kmeans_res <- stations %>%
+    select(latitude, longitude) %>%
+    kmeans(centers = 6, nstart = 20)
+
+# add the .cluster column to our original dataset
+stations <- broom::augment(kmeans_res, stations)
+# we are setting the community names manually here
+community_names <- tibble(id = factor(seq(1, 6, 1))) %>%
+    mutate(community_name = c("Holyoke", "Springfield", "Easthampton",
+                              "South Hadley", "Amherst",
+                              "Northampton"))
+
+# adding the corresponding community name based on .cluster
+stations <- stations %>%
+    left_join(community_names, by = c(".cluster" = "id")) %>%
+    select(-.cluster)
+
+# save this data for use in the package
 usethis::use_data(stations, overwrite = TRUE, compress = "gzip")
 
+
+#' ------------------------------------------------------------------------
+## ------------------------------------------------------------------------
+
+# do voronoi tesselation to get regions for each community
+communities <- kmeans_res %>%
+    broom::tidy(col.names = c("latitude", "longitude")) %>%
+    mutate(location = map2(longitude, latitude,
+                           ~ st_point(c(.x, .y)))) %>%
+    st_as_sf() %>%
+    st_set_crs(NA) %>% # prevent warning on treating lat/lon
+    st_union() %>%
+    st_voronoi() %>%
+    st_collection_extract() %>%
+    st_as_sf() %>% 
+    st_set_crs(4326) %>%
+    mutate(id = factor(row_number())) %>%
+    rename(location = x)
+
+# manually name the communities
+community_names <- tibble(id = factor(seq(1, 6, 1))) %>%
+    mutate(community_name = c("Easthampton", "South Hadley",
+                              "Northampton", "Amherst", "Holyoke",
+                              "Springfield"))
+
+# add the manual labels to the corresponding region
+communities <- communities %>%
+    left_join(community_names, by = "id")
+
+# use in package
+usethis::use_data(communities, overwrite = TRUE, compress = "gzip")
+
+
+#' ------------------------------------------------------------------------
+## ------------------------------------------------------------------------
