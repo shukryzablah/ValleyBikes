@@ -1,0 +1,73 @@
+---
+title: "Downloading From Archive"
+author: "Shukry Zablah"
+output: pdf_document
+---
+
+Load our dialect. https://www.tidyverse.org/
+
+```{r}
+library(tidyverse)
+library(rvest)
+```
+
+We fortunately found a link to the relevant page. Then we waste some time playing around with how they coded the website. 
+
+This should give us what we want. There are two problems: 
+1) We need to find a way to make this starting point automatic.
+2) We have to wait a while. The response time of querying the urls is slow.
+
+```{r}
+page1 <- read_html("http://archive.northamptonma.gov/WebLink/0,0,0,0/fol/651572/Row1.aspx")
+page2 <- read_html("http://archive.northamptonma.gov/WebLink/0,0,0,0/fol/651572/Row26.aspx")
+page3 <- read_html("http://archive.northamptonma.gov/WebLink/0,0,0,0/fol/651572/Row51.aspx")
+```
+
+I have developed a small function to process the pages from the internet.
+More information on http://rvest.tidyverse.org/index.html
+
+```{r}
+get_file_paths_from_page <- function(page) {
+    page %>%
+        html_nodes(".DocumentBrowserCell") %>%
+        html_nodes("a") %>%
+        html_attr("href") %>%
+        map(function(x) paste0("http://archive.northamptonma.gov/WebLink/", x)) %>%
+        flatten_chr()
+}
+```
+
+Then I process the three pages. 
+
+```{r}
+file_paths <- c(get_file_paths_from_page(page1),
+               get_file_paths_from_page(page2),
+               get_file_paths_from_page(page3))
+```
+
+And then we download all those pesky excel files. With a helper function to make things cleaner.
+
+```{r}
+download_from_archive <- function(path, name) {
+    name <- str_split(path, '/') %>% flatten_chr() %>% last()
+    download.file(path, paste0("../data-raw/", name))
+}
+```
+
+This last step will walk through all the paths we have and then download to the correct folder. 
+
+```{r, eval=FALSE}
+file_paths %>%
+    walk(download_from_archive)
+```
+
+Unfortunately the above won't work for whatever unimportant reason. The file is downloaded successfully but the server failure leaves us with garbage. This is a wonderful ocassion for `purrr` and its adverbs. We will do the same but we will do it slowly, with a good delay between requests for good measure. 
+
+```{r}
+slow_download_from_archive <- slowly(download_from_archive,
+                                     rate = rate_delay(420),
+                                     quiet = FALSE)
+
+file_paths %>%
+    walk(slow_download_from_archive)
+```
