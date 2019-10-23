@@ -202,7 +202,7 @@ file_names <- fs::dir_ls("../inst/extdata",
                          regexp = "VB_Routes_Data_2019_.*")
 
 res <- file_names %>%
-    map_dfr(possibly_get_distance_community, NUM=100, comment=F)
+    map_dfr(possibly_get_distance_community, NUM=300, comment=F)
 ```
 
 ```{r}
