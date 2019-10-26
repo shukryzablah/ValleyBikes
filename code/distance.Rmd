@@ -70,7 +70,7 @@ leaflet() %>%
 
 ```{r}
 make_data_thinner <- function(data, num_obs) {
-    if(num_obs == nrow(data)) {
+    if(num_obs >= nrow(data)) {
         return(data)
     }
     n <- min(nrow(data), num_obs)
@@ -202,7 +202,7 @@ file_names <- fs::dir_ls("../inst/extdata",
                          regexp = "VB_Routes_Data_2019_.*")
 
 res <- file_names %>%
-    map_dfr(possibly_get_distance_community, NUM=300, comment=F)
+    map_dfr(possibly_get_distance_community, NUM=10000, comment=F)
 ```
 
 ```{r}

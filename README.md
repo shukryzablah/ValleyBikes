@@ -1,41 +1,68 @@
-# ValleyBikes
 
-This package contains route and station data for the Valley Bike service.
+# `ValleyBikes`
 
-## Installation
+The `ValleyBikes` package aims to make it easier to explore and analyze
+public data from the Pioneer Valley bikeshare initiative: [Valley
+Bike](https://valleybike.org/).
 
-```R
-# Install the development version from Github
+## Installation Instructions
+
+The `ValleyBikes` package is online available for everyone. To install
+you will need the `devtools` package.
+
+``` r
+# install the development version from GitHub
 devtools::install_github("Amherst-Statistics/ValleyBikes")
 ```
 
-For more information on Valley Bike visit: https://valleybike.org/
+    ## Skipping install of 'ValleyBikes' from a github remote, the SHA1 (e1113ccb) has not changed since last install.
+    ##   Use `force = TRUE` to force installation
 
-## Example
+To load the package we do:
 
-    library(ValleyBikes)
-    library(dplyr)
+``` r
+library(ValleyBikes)
+```
 
-    glimpse(stations)
+Now we can begin exploring bike data\!
 
-    ## Observations: 54
-    ## Variables: 6
-    ## $ Serial_Num   <dbl> 19, 50, 17, 22, 23, 13, 30, 603, 45, 35, 2, 43, 48,…
-    ## $ Address      <chr> "330 Homestead Avenue Holyoke Community College", "…
-    ## $ Station_Name <chr> "Holyoke Community College", "Congress Street", "So…
-    ## $ Num_Docks    <int> 16, 10, 15, 17, 13, 4, 16, 10, 9, 14, 16, 10, 20, 1…
-    ## $ Latitude     <dbl> 42.19513, 42.10925, 42.19757, 42.32858, 42.31672, 4…
-    ## $ Longitude    <dbl> -72.65270, -72.59456, -72.60377, -72.64394, -72.635…
+## Looking at the Data
 
-    glimpse(routes)
+There are two tables in our data package:
 
-    ## Observations: 189,419
-    ## Variables: 6
-    ## $ route_id  <chr> "route_06_2018@dd896500-39aa-4e4f-8f48-1c368afb3ca6", …
-    ## $ bike      <chr> "924", "924", "984", "984", "935", "935", "965", "965"…
-    ## $ date      <chr> "2018-06-28 14:09:32+00", "2018-06-28 17:33:57+00", "2…
-    ## $ latitude  <dbl> 42.31419, 42.31415, 42.31752, 42.32057, 42.31745, 42.3…
-    ## $ longitude <dbl> -72.64003, -72.64034, -72.63335, -72.62835, -72.63348,…
-    ## $ user_id   <chr> "1cc1e858-857a-4f80-96e8-974f0e920620", "1cc1e858-857a…
+  - `stations`: contains information about all the stations.
+  - `routes`: contains the start and end entries for all bike rides
+    (routes) taken.
 
+Let’s take a look at the `stations` table:
 
+``` r
+head(stations)
+```
+
+    ## # A tibble: 6 x 7
+    ##   serial_num address station_name num_docks latitude longitude
+    ##        <dbl> <chr>   <chr>            <int>    <dbl>     <dbl>
+    ## 1         19 330 Ho… Holyoke Com…        16     42.2     -72.7
+    ## 2         50 Congre… Congress St…        10     42.1     -72.6
+    ## 3         17 South … South Holyo…        15     42.2     -72.6
+    ## 4         22 YMCA/C… YMCA/Childs…        17     42.3     -72.6
+    ## 5         23 20 Wes… Forbes Libr…        13     42.3     -72.6
+    ## 6         13 Spring… Springdale …         4     42.2     -72.6
+    ## # … with 1 more variable: community_name <chr>
+
+Now let’s take a look at the `routes` table:
+
+``` r
+head(routes)
+```
+
+    ## # A tibble: 6 x 6
+    ##   route_id              bike  date       latitude longitude user_id        
+    ##   <chr>                 <chr> <chr>         <dbl>     <dbl> <chr>          
+    ## 1 route_06_2018@dd8965… 924   2018-06-2…     42.3     -72.6 1cc1e858-857a-…
+    ## 2 route_06_2018@dd8965… 924   2018-06-2…     42.3     -72.6 1cc1e858-857a-…
+    ## 3 route_06_2018@3e2b06… 984   2018-06-2…     42.3     -72.6 72491657-3115-…
+    ## 4 route_06_2018@3e2b06… 984   2018-06-2…     42.3     -72.6 72491657-3115-…
+    ## 5 route_06_2018@8b26d1… 935   2018-06-2…     42.3     -72.6 72491657-3115-…
+    ## 6 route_06_2018@8b26d1… 935   2018-06-2…     42.3     -72.6 72491657-3115-…
