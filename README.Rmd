@@ -1,0 +1,78 @@
+---
+output: github_document
+---
+
+```{r, echo=FALSE}
+knitr::opts_chunk$set(
+  collapse = T, 
+  fig.path = "man/figures/README-"
+)
+```
+
+# `ValleyBikes`
+
+The `ValleyBikes` package aims to make it easier to explore and analyze public data from the Pioneer Valley bikeshare initiative: [Valley Bike](https://valleybike.org/).
+
+## Installation Instructions
+
+The `ValleyBikes` package is online available for everyone. To install you will need the `devtools` package. 
+
+```{r, eval=FALSE}
+# install the development version from GitHub
+devtools::install_github("Amherst-Statistics/ValleyBikes")
+```
+
+To load the package: 
+
+```{r, message=FALSE}
+library(ValleyBikes)
+library(dplyr)
+```
+
+Now we can begin exploring bike data!
+
+## Looking at the Data
+
+There are two tables in our data package: 
+
+- `stations`: contains information about all the stations.
+- `routes`: contains the start and end entries for all bike rides (routes) taken.
+
+Let's take a look at the `stations` table: 
+
+```{r}
+head(stations)
+```
+
+Now let's take a look at the `routes` table: 
+
+```{r}
+head(routes)
+```
+
+## Analyzing Usage Patterns
+
+Suppose that we want to explore the difference between weekdays and weekends for 2019. We can easily create a plot:
+
+```{r, message = F}
+library(ggplot2)
+library(lubridate)
+```
+
+```{r}
+routes %>%
+    filter(year(date) >= 2019) %>% 
+    mutate(hour = hour(date), day = wday(date, label=T, abbr=T),
+           month = month(date, label = T, abbr = T)) %>%
+    mutate(weekday = ifelse(day == "Sun" | day == "Mon", "Yes", "No")) %>% 
+    count(route_id, hour, weekday, month) %>%
+    count(hour, weekday, month) %>% 
+    ggplot(aes(x = hour, y = n, color = weekday)) +
+    geom_smooth(method = "loess") +
+    facet_wrap(~ month) +
+    labs(x = "Hour of Day", y = "# of Rides", color = "Weekday?", 
+         title = "Valley Bike Usage", subtitle = "Weekdays vs Weekends")
+```
+
+From the figure we can see that the gap between weekdays and weekends increases in summer and suddenly dissapears when school starts. 
+
