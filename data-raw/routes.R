@@ -5,6 +5,7 @@ library(janitor)
 library(dplyr)
 library(fs)
 library(usethis)
+library(lubridate)
 
 
 ## ------------------------------------------------------------------------
@@ -40,6 +41,8 @@ extract_from_matching_files <- function(pattern = NULL) {
 ## ------------------------------------------------------------------------
 routes <- extract_from_matching_files("VB_Routes_Data_201._*")
 
+routes <- routes %>%
+    mutate(date = ymd_hms(date, tz = "EST", quiet = TRUE))
 
 ## ------------------------------------------------------------------------
 usethis::use_data(routes, overwrite = TRUE, compress = "gzip")
