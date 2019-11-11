@@ -35,22 +35,92 @@ library(ValleyBikes)
 help(package= "ValleyBikes")
 ```
 
-## Exploring the Data
+### Exploring the Data
 
 A few natural questions arise from the datasets provided. 
 
-1) Where are these stations located? Can we visualize this?
+# 1) Where are these stations located? Can we visualize this?
 
 Using the "leaflet" function in tandem with the stations data, we can create a nice map of the stations.
 ```{r}
 library(leaflet)
 stations%>%
-bikemap<- leaflet()%>%
+bikemap<-leaflet()%>%
   addTiles()%>%
-  addMarkers(lng='longitude', lat='latitude')
-bikemap
+  addMarkers(lng=~longitude, lat=~latitude, data=stations)
 
+bikemap
+```
+
+## 2) How does the usage vary across the year?
+
+Using the "lubridate" package we can work with the routes data to visualize variation in usage.
+
+Here we clean up the variable 'date' to fit the ymd_hms format.
+
+```{r}
+library(lubridate)
+glimpse(routes)
+
+routes2<-routes%>%
+   mutate(dates=ymd_hms(date))%>%
+   mutate(year=substr(dates, 1,4))%>%
+   mutate(month=substr(dates, 6,7))%>%
+   mutate(time=substr(dates, 11,18))%>%
+   mutate(hour=substr(time, 1,3))
 
 ```
 
-2) 
+
+# Monthly Usage
+
+```{r}
+library(ggplot2)
+routes2%>%
+  group_by(month)%>%
+  count()%>%
+ggplot(aes(x=month, y=n))+
+  geom_point()+
+  geom_abline()+
+  ggtitle("Monthly Usage")
+```
+
+# Yearly Usage
+
+```{r}
+routes2%>%
+  filter(year>=2017)%>%
+  group_by(year)%>%
+  count()
+```
+
+# Hourly Usage
+
+The plot of hourly usage follows a nice pattern. However we know that the most popular hour is not 22 (10 pm). So we employ a 'force_tz' to change the time zone.
+
+```{r}
+routes2%>%
+  group_by(hour)%>%
+  count()%>%
+ggplot(aes(x=hour, y=n))+
+  geom_point()+
+  geom_line()+
+  ggtitle("Hourly Usage (Wrong TZ)")
+
+routes3<-routes2%>%
+force_tz(time, tzone = "??????")%>%
+mutate(hour=substr(time, 2,3))
+  
+
+routes3%>%
+  group_by(hour)%>%
+  count()%>%
+ggplot(aes(x=hour, y=n))+
+  geom_point()+
+  geom_line()+
+  ggtitle("Hourly Usage (Right TZ")
+```
+
+
+
+
