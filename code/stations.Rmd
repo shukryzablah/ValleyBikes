@@ -1,0 +1,41 @@
+---
+title: "Plotting Valley Bike Stations"
+author: "Shukry Zablah"
+date: "`r Sys.Date()`"
+output: "pdf_document"
+---
+
+## Install Package
+
+Before we start, make sure that the `ValleyBikes` package is installed in your computer.
+
+```{r, eval=FALSE}
+devtools::install_github("Amherst-Statistics/ValleyBikes")
+```
+
+## Load Package
+
+To plot the stations we will use the `ValleyBikes` package. 
+
+```{r}
+library(ValleyBikes)
+library(ggplot2)
+```
+
+## Plot Stations
+
+The data is lazily loaded when it is needed. The package contains a dataframe of the stations.
+
+```{r}
+glimpse(stations)
+```
+
+Now we plot them.
+
+```{r}
+ggplot(stations, aes(x = longitude, y = latitude, color = community_name)) +
+    geom_point(size = 4, shape = 1, stroke = 2) +
+    labs(x = "Longitude", y = "Latitude",
+         title = "Map of Valley Bike Stations",
+         color = "Community")
+```

@@ -1,0 +1,23 @@
+---
+title: "Manuscript"
+author: "Emily Lachtara"
+date: "10/26/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Guidelines for Submission
+- flat ASCII text file, or CSV*** of data
+- documentation file with codebook of variables and narrative of the data/motivation (submission to JSE)
+-Helpful Hint/ Potential Pitfall/ Alternative Application
+
+```{r}
+#Example for Doc file
+http://jse.amstat.org/v18n3/datasets_template.htm
+
+#General rules for JSE article
+http://jse.amstat.org/jse_author_info.htm
+```
