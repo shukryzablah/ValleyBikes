@@ -28,6 +28,8 @@ Day <- read_csv(paste0(base_dir, "VB_Routes_Data_2018_06_30.csv.gz"),
 
 However this isn't flexible because it loads the file into memory, while we want to download it.
 
+Here is a function that takes a path to a resource and an output directory and only downloads the file if it hasn't been downloaded yet.
+
 ```{r}
 # download a single file. this function should contain check if the file was already downloaded.
 fetch_file <- function(file_path, output_dir, replace = FALSE) {
@@ -36,5 +38,37 @@ fetch_file <- function(file_path, output_dir, replace = FALSE) {
     if(!file.exists(output_path) || replace) {
         download.file(file_path, destfile = output_path)
     }
+    return(output_path)
+}
+```
+
+We want to do this for multiple files through a single function that asks to download all the files within a given set of year/months.
+
+First we create function that downloads a given date, e.g. `2019_07_26`
+
+```{r}
+fetch_date <- function(date, output_dir, replace = FALSE) {
+    root <- "https://nhorton.people.amherst.edu/valleybikes"
+    prefix <- "VB_Routes_Data_"
+    suffix <- ".csv.gz"
+    file_name <- paste0(prefix, date, suffix)
+    file_path <- file.path(root, file_name)
+    output_path <- fetch_file(file_path, output_dir, replace)
+    return(output_path)
+}
+```
+
+Now we create a function that downloads all dates between a start and an end date. 
+
+```{r}
+fetch_dates <- function(start_date, end_date, output_dir, replace = FALSE) {
+    dates <- seq(from = lubridate::as_date(start_date),
+                 to = lubridate::as_date(end_date),
+                 by = "days")
+    dates <- dates %>%
+        purrr::map_chr(~ stringr::str_replace_all(.x, "-", "_"))
+    output_paths <- dates %>%
+        purrr::map_chr(~ fetch_date(.x, output_dir, replace))
+    return(output_paths)
 }
 ```
