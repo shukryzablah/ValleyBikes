@@ -45,12 +45,8 @@ Using the "leaflet" function in tandem with the stations data, we can create a n
 
 ```{r}
 library(leaflet)
-stations%>%
-bikemap<-leaflet()%>%
-  addTiles()%>%
-  addMarkers(lng=~longitude, lat=~latitude, data=stations)
-
-bikemap
+bikemap<-leaflet(stations) %>% addTiles()
+bikemap %>% addMarkers(lng=~longitude, lat=~latitude, data=stations)
 ```
 
 ## 2) How does the usage vary across the year?
@@ -69,7 +65,6 @@ routes2<-routes%>%
    mutate(month=substr(dates, 6,7))%>%
    mutate(time=substr(dates, 11,18))%>%
    mutate(hour=substr(time, 1,3))
-
 ```
 
 
