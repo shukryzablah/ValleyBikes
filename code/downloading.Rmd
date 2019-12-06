@@ -32,11 +32,11 @@ Here is a function that takes a path to a resource and an output directory and o
 
 ```{r}
 # download a single file. this function should contain check if the file was already downloaded.
-fetch_file <- function(file_path, output_dir, replace = FALSE) {
+fetch_file <- function(file_path, output_dir, replace = FALSE, quiet = FALSE) {
     file_name <- basename(file_path)
     output_path <- file.path(output_dir, file_name)
     if(!file.exists(output_path) || replace) {
-        download.file(file_path, destfile = output_path)
+        download.file(file_path, destfile = output_path, quiet = quiet)
     }
     return(output_path)
 }
@@ -47,13 +47,13 @@ We want to do this for multiple files through a single function that asks to dow
 First we create function that downloads a given date, e.g. `2019_07_26`
 
 ```{r}
-fetch_date <- function(date, output_dir, replace = FALSE) {
+fetch_date <- function(date, output_dir, replace = FALSE, quiet = FALSE) {
     root <- "https://nhorton.people.amherst.edu/valleybikes"
     prefix <- "VB_Routes_Data_"
     suffix <- ".csv.gz"
     file_name <- paste0(prefix, date, suffix)
     file_path <- file.path(root, file_name)
-    output_path <- fetch_file(file_path, output_dir, replace)
+    output_path <- fetch_file(file_path, output_dir, replace, quiet)
     return(output_path)
 }
 ```
@@ -61,14 +61,27 @@ fetch_date <- function(date, output_dir, replace = FALSE) {
 Now we create a function that downloads all dates between a start and an end date. 
 
 ```{r}
-fetch_dates <- function(start_date, end_date, output_dir, replace = FALSE) {
+fetch_dates <- function(start_date, end_date, output_dir, replace = FALSE, quiet = FALSE) {
     dates <- seq(from = lubridate::as_date(start_date),
                  to = lubridate::as_date(end_date),
                  by = "days")
     dates <- dates %>%
         purrr::map_chr(~ stringr::str_replace_all(.x, "-", "_"))
     output_paths <- dates %>%
-        purrr::map_chr(~ fetch_date(.x, output_dir, replace))
-    return(output_paths)
+        purrr::map_chr(~ fetch_date(.x, output_dir, replace, quiet))
+    return(invisible(output_paths))
 }
+```
+
+We can improve the readability of the functions if we find a better way to pass down the arguments, but for now this works: 
+
+```{r, eval = FALSE}
+fetch_dates("2018-07-06", "2018-07-08", output_dir = "~/Downloads",
+            replace = TRUE, quiet = TRUE)
+
+# or we can save the return value to have a list of paths to further
+# use with purrr
+file_paths <- fetch_dates("2018-07-06", "2018-07-08",
+                          output_dir = "~/Downloads",
+                          replace = TRUE, quiet = TRUE)
 ```

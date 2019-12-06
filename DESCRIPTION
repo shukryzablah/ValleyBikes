@@ -1,5 +1,5 @@
 Package: ValleyBikes
-Title: Valley Bike route and station data.
+Title: Valley Bike route and station data
 Version: 0.0.0.9001
 Authors@R: 
     person(given = "Shukry",
@@ -15,11 +15,20 @@ Authors@R:
            role = c("aut", "cre"),
            email = "nhorton@amherst.edu")
 Description: The package provides route and station data from 2018-2019 for the Valley Bikes bikeshare system. It also provides an example of the raw GPS data.
-License: MIT
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.0.0
+RoxygenNote: 7.0.2
 Suggests: 
     knitr,
-    rmarkdown
+    rmarkdown,
+    ggplot2,
+    leaflet,
+    xtable
 VignetteBuilder: knitr
+Imports: 
+    dplyr,
+    purrr,
+    lubridate,
+    stringr
+License: MIT + file LICENSE
+Depends: R (>= 2.10)

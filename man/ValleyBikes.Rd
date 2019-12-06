@@ -3,6 +3,7 @@
 \docType{package}
 \name{ValleyBikes}
 \alias{ValleyBikes}
+\alias{ValleyBikes-package}
 \title{ValleyBikes: A package for exploring data from Pioneer Valley bikeshare.}
 \description{
 The foo package provides an easy way to start exploring data from
