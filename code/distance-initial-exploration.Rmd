@@ -1,0 +1,173 @@
+---
+title: "Exploring Distance"
+author: "Shukry Zablah"
+date: "`r Sys.Date()`"
+output: "pdf_document"
+---
+
+```{r}
+library(tidyverse)
+library(USAboundaries)
+library(sf)
+library(ValleyBikes)
+library(geosphere)
+library(gganimate)
+```
+
+```{r}
+path <- system.file("extdata", "VB_Routes_Data_2019_09_10.csv.gz",
+                    package = "ValleyBikes", mustWork = TRUE)
+
+day <- read_csv(path, skip = 2) %>%
+    janitor::clean_names()
+```
+
+```{r}
+specific <- day %>% arrange(desc(date)) %>% pull(route_id) %>% pluck(1)
+another <- day %>% arrange(desc(date)) %>% count(route_id) %>% pull(route_id) %>% pluck(2)
+
+one <- day %>%
+    filter(route_id %in% c(specific))
+
+anotherone <- day %>%
+    filter(route_id %in% c(another))
+
+two <- day %>%
+    filter(route_id %in% c(specific, another))
+
+```
+
+```{r}
+cities <- us_cities() %>%
+    filter(city %in% c("Amherst", "South Hadley", "Northampton",
+                       "Easthampton", "Springfield", "Holyoke"),
+           state_abbr == "MA")
+```
+
+```{r}
+one %>% ggplot(aes(x = longitude, y = latitude, color = date)) + geom_point(size = 3) + geom_point(data = stations %>% filter(longitude < -72.625, latitude < 42.3, latitude > 42.2), aes(x = longitude, y = latitude), size = 7, shape = 3, color = "red") + transition_reveal(date) 
+```
+
+```{r}
+one %>% select(longitude, latitude) %>% distHaversine() %>% head(20)
+```
+
+```{r}
+get_path_distance <- function(data) {
+    data %>% select(longitude, latitude) %>% distHaversine() %>% sum()
+}
+
+get_distance <- possibly(get_path_distance, NA)
+```
+
+```{r}
+dayd<- day %>% group_by(route_id, bike, user_id) %>% nest() %>% mutate(distance = map_dbl(data, get_distance))
+```
+
+```{r}
+dayd %>% ungroup() %>% filter(distance < 10e3) %>% ggplot(aes(x = distance/1000)) + geom_histogram()
+```
+
+```{r}
+less_granular <- function(data) {
+    data %>% filter(date == min(date) | date == max(date))
+}
+```
+
+```{r}
+day %>% group_by(route_id, bike, user_id) %>% nest()  %>% mutate(dataa = map(data, less_granular)) %>% glimpse()
+```
+
+```{r}
+k <- stations %>% select(latitude, longitude) %>%
+    kmeans(centers = 6, nstart = 20)
+
+stationss <- stations %>% mutate(community = factor(k$cluster), point = map2(latitude, longitude, ~ st_point(c(.y, .x)))) %>% st_as_sf() %>% st_set_crs(4326)
+
+stationss %>% ggplot() + geom_sf(aes(geometry = point, color = community))
+```
+
+```{r}
+centers <- k$centers %>% as_tibble() %>% mutate(point = map2(latitude, longitude, ~ st_point(c(.y, .x)))) %>% st_as_sf() %>% st_set_crs(4326) 
+
+communities <- st_union(centers) %>% st_voronoi() %>% st_collection_extract() %>% st_as_sf() %>%  mutate(id = row_number())
+
+communities %>% ggplot() + geom_sf() + geom_sf(data = stationss)
+```
+
+```{r}
+dayy <- day %>% mutate(point = map2(latitude, longitude, ~ st_point(c(.y, .x)))) %>% st_as_sf() %>% st_set_crs(4326)
+```
+
+```{r}
+get_area <- function(x) {
+    xx <- st_contains(communities$x, x, sparse = F)
+    xxx <- seq(xx)[xx]
+    if(length(xxx) == 0) NA else xxx
+}
+```
+
+```{r}
+dayx <- dayy %>% mutate(area = map_dbl(point, ~ quietly(get_area)(.x)$result)) 
+```
+
+```{r}
+dayx %>% as_tibble() %>% group_by(route_id, bike, user_id, area) %>% nest() %>% mutate(distance = map_dbl(data, get_distance)) %>% group_by(area) %>% summarize(sum(distance, na.rm=T))
+```
+
+```{r}
+set.seed(1)
+
+kmeans_res <- stations %>%
+    select(latitude, longitude) %>%
+    kmeans(centers = 6, nstart = 20)
+
+stations <- broom::augment(kmeans_res, stations)
+
+stations <- stations %>%
+    mutate(location = map2(longitude, latitude,
+                           ~ st_point(c(.x, .y)))) %>%
+    st_as_sf() %>%
+    st_set_crs(4326)
+
+community_names <- tibble(id = factor(seq(1, 6, 1))) %>%
+    mutate(community_name = c("Holyoke", "Springfield", "Easthampton",
+                              "South Hadley", "Amherst",
+                              "Northampton"))
+
+stations <- stations %>%
+    left_join(community_names, by = c(".cluster" = "id"))
+
+```
+
+```{r}
+communities <- kmeans_res %>%
+    broom::tidy(col.names = c("latitude", "longitude")) %>%
+    mutate(location = map2(longitude, latitude,
+                           ~ st_point(c(.x, .y)))) %>%
+    st_as_sf() %>%
+    st_set_crs(NA) %>% # prevent warning on treating lat/lon
+    st_union() %>%
+    st_voronoi() %>%
+    st_collection_extract() %>%
+    st_as_sf() %>% 
+    st_set_crs(4326) %>%
+    mutate(id = factor(row_number())) %>%
+    rename(location = x)
+
+communities %>% ggplot() + geom_sf(aes(fill = id))
+
+community_names <- tibble(id = factor(seq(1, 6, 1))) %>%
+    mutate(community_name = c("Easthampton", "South Hadley",
+                              "Northampton", "Amherst", "Holyoke",
+                              "Springfield"))
+
+communities <- communities %>%
+    left_join(community_names, by = "id")
+
+communities %>% ggplot() +
+    geom_sf(aes(fill = community_name)) +
+    geom_sf_label(aes(label = community_name)) +
+    geom_sf(data = stations)
+
+```

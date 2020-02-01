@@ -25,15 +25,20 @@ library(ValleyBikes)
 
 ### It includes
 
-*Data set "routes" with variables: route_id, bike, date, latitude, longitude, user_id
-    
-*Data set "stations" with variables: Serial_num, Address, Station_name, Num_docks, Latitude, Longitude
-    
-*More information can be obtained with help(package= "ValleyBikes)
+Data set "routes" with variables: route_id, bike, date, latitude, longitude, user_id
 
 ```{r}
-help(package= "ValleyBikes")
+head(routes)
 ```
+    
+Data set "stations" with variables: serial_num, address, station_name, num_docks, latitude, longitude
+   
+```{r}
+head(stations)
+``` 
+
+More information can be obtained with help(package= "ValleyBikes)
+
 
 ### Exploring the Data
 
@@ -45,12 +50,9 @@ Using the "leaflet" function in tandem with the stations data, we can create a n
 
 ```{r}
 library(leaflet)
-stations%>%
-bikemap<-leaflet()%>%
-  addTiles()%>%
-  addMarkers(lng=~longitude, lat=~latitude, data=stations)
 
-bikemap
+bikemap<-leaflet(stations) %>% addTiles()
+bikemap %>% addMarkers(lng=~longitude, lat=~latitude, popup= ~station_name, data=stations)
 ```
 
 ## 2) How does the usage vary across the year?
@@ -61,15 +63,12 @@ Here we clean up the variable 'date' to fit the ymd_hms format.
 
 ```{r}
 library(lubridate)
-glimpse(routes)
 
 routes2<-routes%>%
    mutate(dates=ymd_hms(date))%>%
-   mutate(year=substr(dates, 1,4))%>%
-   mutate(month=substr(dates, 6,7))%>%
-   mutate(time=substr(dates, 11,18))%>%
-   mutate(hour=substr(time, 1,3))
-
+   mutate(year=year(dates))%>%
+   mutate(month = month(dates, label = T, abbr = T))%>%
+   mutate(hour=hour(dates))
 ```
 
 
@@ -77,35 +76,37 @@ routes2<-routes%>%
 
 August sees the most bike usage, whereas there is no usage in the winter months.
 
-```{r}
+```{r, warning=FALSE}
 library(ggplot2)
 routes2%>%
   group_by(month)%>%
   count()%>%
+  filter(month!= "NA")%>%
 ggplot(aes(x=month, y=n))+
-  geom_point()+
-  ggtitle("Monthly Usage")
+  geom_bar(stat="identity")+
+  labs(title="Monthly Usage" )
 ```
 
 # Yearly Usage
 
 ```{r}
-routes2%>%
-  filter(year>=2017)%>%
+library(xtable)
+library(knitr)
+kable(routes2%>%
+  filter(year>=2018)%>%
   group_by(year)%>%
-  count()
+  summarize(
+      number = n()
+  ), caption= "Rides per year")
 ```
 
 # Hourly Usage
 
-The plot of hourly usage follows a nice pattern. However we know that the most popular hour is not 22 (10 pm). So we employ a 'force_tz' to change the time zone to 'Eastern'. We can see that the most popular trip time is 4 pm.
+The plot of hourly usage follows a nice pattern. However we know that the most popular hour is not 21 (9 pm). So we employ a 'force_tz' to change the time zone to 'Eastern'. We can see that the most popular trip time is 4 pm.
 
 ```{r}
-routes3<-routes2%>%
-force_tz(time, tzone = "US/Eastern")%>%
-mutate(hour=substr(time, 2,3))
-
-routes3%>%
+routes2%>%
+   force_tz(hour, tzone = "US/Eastern")%>%
   group_by(hour)%>%
   count()%>%
 ggplot(aes(x=hour, y=n))+
@@ -115,9 +116,6 @@ ggplot(aes(x=hour, y=n))+
 ```
 
 
-## 3) What does a trip look like?
-
-## 4) What are the most popular stations?
 
 
 

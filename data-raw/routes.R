@@ -45,5 +45,5 @@ routes <- routes %>%
     mutate(date = ymd_hms(date, tz = "EST", quiet = TRUE))
 
 ## ------------------------------------------------------------------------
-usethis::use_data(routes, overwrite = TRUE, compress = "gzip")
+usethis::use_data(routes, overwrite = TRUE)
 

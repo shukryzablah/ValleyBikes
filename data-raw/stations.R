@@ -78,7 +78,7 @@ stations <- stations %>%
     select(-.cluster)
 
 # save this data for use in the package
-usethis::use_data(stations, overwrite = TRUE, compress = "gzip")
+usethis::use_data(stations, overwrite = TRUE)
 
 
 #' ------------------------------------------------------------------------
@@ -109,8 +109,8 @@ community_names <- tibble(id = factor(seq(1, 6, 1))) %>%
 communities <- communities %>%
     left_join(community_names, by = "id")
 
-# use in package
-usethis::use_data(communities, overwrite = TRUE, compress = "gzip")
+# use in package: uncomment line to make communities available in build
+# usethis::use_data(communities, overwrite = TRUE)
 
 
 #' ------------------------------------------------------------------------
